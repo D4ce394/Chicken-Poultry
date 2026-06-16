@@ -423,12 +423,6 @@
                         </tbody>
                     </table>
                 {/if}
-                <div class="mt-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 px-4 py-3">
-                    <p class="text-theme-xs text-blue-600 dark:text-blue-400">
-                        <strong>Catatan:</strong> Letakkan file model YOLO (.pt) melalui panel Upload Model.
-                        Model dari script <code class="font-mono bg-blue-100 dark:bg-blue-900/30 px-1 rounded">counting_ayam.py</code> (folder <code class="font-mono bg-blue-100 dark:bg-blue-900/30 px-1 rounded">poultry_model/</code>) dapat diupload langsung di sini.
-                    </p>
-                </div>
             </div>
         </div>
 
@@ -523,13 +517,6 @@
                     {/if}
                 </div>
 
-                <div class="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-4 py-3">
-                    <p class="text-theme-xs text-amber-700 dark:text-amber-400">
-                        <strong>Tips:</strong> Upload file <code class="font-mono">last.pt</code> dari folder
-                        <code class="font-mono">poultry_model/versi_2/</code> di script counting Anda.
-                        Model akan otomatis tersedia di Dashboard Ayam untuk digunakan.
-                    </p>
-                </div>
             </div>
         </div>
     </div>
