@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { PUBLIC_API_URL } from '$env/static/public';
 
 export const api = axios.create({
-    baseURL: 'http://localhost:3000/api'
+    baseURL: PUBLIC_API_URL || 'http://localhost:3000/api'
 });
 
 api.interceptors.request.use(
@@ -12,7 +13,7 @@ api.interceptors.request.use(
                 config.headers['Authorization'] = token;
             }
         }
-        
+
         config.headers['Cache-Control'] = 'no-cache';
         config.headers['Pragma'] = 'no-cache';
         config.headers['If-Modified-Since'] = '0';

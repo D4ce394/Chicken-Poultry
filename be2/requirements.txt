@@ -1,12 +1,11 @@
 # Environment Configuration
 python-dotenv==1.0.0
 
-#testing perubahan database ya dari mobiledb ke sqlite
-# Database - PostgreSQL Only
+# Database
 asyncpg==0.29.0
-databases[postgresql]==0.8.0
-sqlalchemy==1.4.46
-alembic==1.12.1
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+alembic==1.13.1
 
 # FastAPI and server
 pydantic==2.8.0
@@ -14,7 +13,7 @@ fastapi==0.111.0
 uvicorn[standard]==0.29.0
 python-multipart==0.0.9
 
-# YOLO and Computer Vision - Updated for YOLO11 support
+# YOLO and Computer Vision
 ultralytics==8.3.168
 torch==2.3.0
 torchvision>=0.18.0
@@ -22,9 +21,7 @@ opencv-python-headless==4.8.1.78
 Pillow==10.3.0
 
 # Image processing and utilities
-# numpy<2 required: cv2 4.10.x compiled against numpy 1.x
 numpy>=1.24.0,<2
-# Video transcoding: imageio-ffmpeg bundles a static ffmpeg binary with libx264
 imageio-ffmpeg>=0.5.0
 av>=12.0.0
 timm==1.0.3
@@ -41,7 +38,7 @@ structlog>=23.1.0
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
 
-# Additional utilities for model processing
+# Additional utilities
 scipy>=1.14.1
 matplotlib>=3.9.0
 pandas>=2.2.0

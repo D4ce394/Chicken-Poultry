@@ -1,3 +1,4 @@
+node_modules/
 venv/
 __pycache__/
 *.pyc
@@ -6,7 +7,8 @@ __pycache__/
 *.sqlite3
 *.sqlite
 .DS_Store
-# Firebase service account (contains private key — never commit)
 *firebase-adminsdk*.json
-# Uploaded media files
 be2/uploads/
+chicken-poultry/
+yarn.lock
+package-lock.json
