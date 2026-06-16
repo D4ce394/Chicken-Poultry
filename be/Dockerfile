@@ -17,9 +17,10 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/prisma ./prisma
 
-RUN npm ci --production && npx prisma generate
+RUN npm ci --omit=dev && npx prisma generate
 
 RUN mkdir -p /app/logs
 
