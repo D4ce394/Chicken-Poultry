@@ -23,24 +23,60 @@ const sequelize = new Sequelize({
     },
 });
 
-(async () => {
-    try {
-        await sequelize.authenticate();
-        logger.info('SQLite database connected ✅');
-    } catch (error) {
-        logger.error('Unable to connect to SQLite ❌', error);
-    }
-})();
-
 export const DB = {
     Users: userModel(sequelize),
     Roles: roleModel(sequelize),
     Monitoring: monitoringModel(sequelize),
     Alerts: alertModel(sequelize),
-    Recordings: recordingModel(sequelize), 
+    Recordings: recordingModel(sequelize),
     sequelize,
     Sequelize,
 };
 
 DB.Users.belongsTo(DB.Roles, { foreignKey: 'role_id', as: 'role' });
 DB.Recordings.belongsTo(DB.Monitoring, { foreignKey: 'camera_id', as: 'camera' });
+
+(async () => {
+    try {
+        await sequelize.authenticate();
+        logger.info('SQLite database connected ✅');
+
+        await sequelize.sync({ alter: true });
+        logger.info('Tables synced ✅');
+
+        await seedDefaultData();
+    } catch (error) {
+        logger.error('Database init failed ❌', error);
+    }
+})();
+
+async function seedDefaultData() {
+    const bcrypt = await import('bcrypt');
+
+    // Seed role admin
+    const [adminRole] = await DB.Roles.findOrCreate({
+        where: { name: 'admin' },
+        defaults: {
+            name: 'admin',
+            description: 'Administrator with full access',
+            permissions: JSON.stringify(['all']),
+        } as any,
+    });
+
+    // Seed user admin default
+    const existing = await DB.Users.findOne({ where: { email: 'admin@admin.com' } });
+    if (!existing) {
+        const hashed = await bcrypt.hash('Admin123!', 10);
+        await DB.Users.create({
+            name: 'Admin',
+            email: 'admin@admin.com',
+            username: 'admin',
+            password: hashed,
+            role_id: adminRole.get('id'),
+            isApproved: true,
+            department: 'IT',
+            isOnline: false,
+        } as any);
+        logger.info('Default admin user created ✅ (admin@admin.com / Admin123!)');
+    }
+}
