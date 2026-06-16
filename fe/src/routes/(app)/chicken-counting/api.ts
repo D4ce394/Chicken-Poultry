@@ -1,10 +1,10 @@
 import axios from 'axios';
+import { PUBLIC_BE2_URL } from '$env/static/public';
 import type { ChickenSession, ChickenLatest, ChickenDailySummary } from '$lib/interfaces/chicken.interfaces';
 
-// be2 (Python/FastAPI) runs on port 8000
-const apiAI = axios.create({ baseURL: 'http://localhost:8000' });
+const apiAI = axios.create({ baseURL: PUBLIC_BE2_URL || 'http://localhost:8000' });
 
-export const BE2_BASE = 'http://localhost:8000';
+export const BE2_BASE = PUBLIC_BE2_URL || 'http://localhost:8000';
 
 // URL to play the processed result video (use in <video src={...}>)
 export const PROCESSED_VIDEO_URL = `${BE2_BASE}/api/mobile/v1/chicken/process/video`;

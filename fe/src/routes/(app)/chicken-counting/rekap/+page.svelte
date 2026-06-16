@@ -6,10 +6,10 @@
         Download, RefreshCcw, TrendingUp, Users
     } from '@lucide/svelte';
     import Breadcrumb from '../../../../components/breadcrumb/Breadcrumb.svelte';
-    import { getLatestCount, getSessions, getDailySummary } from '../api';
+    import { getLatestCount, getSessions, getDailySummary, BE2_BASE } from '../api';
     import type { ChickenSession, ChickenDailySummary } from '$lib/interfaces/chicken.interfaces';
 
-    const BE2 = 'http://localhost:8000';
+    const BE2 = BE2_BASE;
 
     // ── Types ─────────────────────────────────────────────────────────────────
     interface MonthlyRekap {
