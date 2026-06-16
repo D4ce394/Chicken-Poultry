@@ -20,7 +20,6 @@ export default function (sequelize: Sequelize): typeof RoleModel {
         allowNull: false,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
-        autoIncrement: true
       },
       name: {
         type: DataTypes.STRING,
@@ -32,10 +31,17 @@ export default function (sequelize: Sequelize): typeof RoleModel {
         allowNull: false,
       },
       permissions: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.TEXT,
         allowNull: false,
-        defaultValue: [], 
-      },      
+        defaultValue: '[]',
+        get() {
+          const raw = this.getDataValue('permissions' as any);
+          try { return JSON.parse(raw as unknown as string); } catch { return []; }
+        },
+        set(value: string[]) {
+          this.setDataValue('permissions' as any, JSON.stringify(value) as any);
+        },
+      },
       
       created_at: {
         type: DataTypes.DATE,
