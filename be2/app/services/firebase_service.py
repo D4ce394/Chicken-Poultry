@@ -3,6 +3,8 @@ Firebase Service
 Handles connection to Firebase Realtime Database for chicken counting data.
 """
 import os
+import json
+import base64
 import logging
 from typing import Optional
 import firebase_admin
@@ -10,17 +12,38 @@ from firebase_admin import credentials, db
 
 logger = logging.getLogger(__name__)
 
-# Path to Firebase service account key
-_SERVICE_ACCOUNT_PATH = os.getenv(
-    "FIREBASE_SERVICE_ACCOUNT_PATH",
-    os.path.join(os.path.dirname(__file__), "..", "..", "rfid-de0fd-firebase-adminsdk-fbsvc-22ca2974df.json")
-)
-
-# Firebase Realtime Database URL
 _DATABASE_URL = os.getenv(
     "FIREBASE_DATABASE_URL",
-    "https://rfid-de0fd-default-rtdb.firebaseio.com"
+    "https://rfid-de0fd-default-rtdb.asia-southeast1.firebasedatabase.app"
 )
+
+
+def _load_credentials() -> Optional[credentials.Certificate]:
+    """
+    Load Firebase credentials from (in order of priority):
+    1. FIREBASE_SERVICE_ACCOUNT_BASE64 env var — base64-encoded JSON (for HF Spaces / CI)
+    2. FIREBASE_SERVICE_ACCOUNT_PATH env var — path to JSON file
+    3. Default JSON file path (local dev)
+    """
+    # 1. Base64-encoded JSON dari env var (Hugging Face Secrets)
+    b64 = os.getenv("FIREBASE_SERVICE_ACCOUNT_BASE64")
+    if b64:
+        try:
+            sa_dict = json.loads(base64.b64decode(b64).decode("utf-8"))
+            return credentials.Certificate(sa_dict)
+        except Exception as e:
+            logger.error(f"Failed to decode FIREBASE_SERVICE_ACCOUNT_BASE64: {e}")
+
+    # 2. Path ke file JSON
+    sa_path = os.getenv(
+        "FIREBASE_SERVICE_ACCOUNT_PATH",
+        os.path.join(os.path.dirname(__file__), "..", "..", "rfid-de0fd-firebase-adminsdk-fbsvc-22ca2974df.json")
+    )
+    if os.path.exists(sa_path):
+        return credentials.Certificate(sa_path)
+
+    logger.warning("Firebase service account not found — Firebase features disabled.")
+    return None
 
 
 class FirebaseService:
@@ -36,20 +59,14 @@ class FirebaseService:
             return
 
         if not _DATABASE_URL:
-            logger.warning(
-                "FIREBASE_DATABASE_URL is not set. Firebase features will not work."
-            )
+            logger.warning("FIREBASE_DATABASE_URL is not set.")
             return
 
-        if not os.path.exists(_SERVICE_ACCOUNT_PATH):
-            logger.warning(
-                f"Firebase service account key not found at: {_SERVICE_ACCOUNT_PATH}. "
-                "Firebase features will not work."
-            )
+        cred = _load_credentials()
+        if not cred:
             return
 
         try:
-            cred = credentials.Certificate(_SERVICE_ACCOUNT_PATH)
             firebase_admin.initialize_app(cred, {"databaseURL": _DATABASE_URL})
             FirebaseService._initialized = True
             logger.info("Firebase initialized successfully.")
@@ -61,38 +78,19 @@ class FirebaseService:
         return FirebaseService._initialized
 
     def get_ref(self, path: str):
-        """Return a Firebase database reference for the given path."""
         if not self.is_ready:
-            raise RuntimeError(
-                "Firebase is not initialized. Check FIREBASE_DATABASE_URL and "
-                "firebase-service-account.json placement."
-            )
+            raise RuntimeError("Firebase is not initialized.")
         return db.reference(path)
 
     def get_chicken_history(self, date: Optional[str] = None) -> dict:
-        """
-        Read chicken counting history from Firebase.
-
-        Structure:
-          chicken_counter/history/{date}/{session_id}/
-            chicken_total, last_update, start_time, status, stop_time
-
-        Args:
-            date: target date string "YYYY-MM-DD". If None, reads all dates.
-
-        Returns:
-            Raw dict from Firebase.
-        """
         path = "chicken_counter/history"
         if date:
             path = f"{path}/{date}"
-
         ref = self.get_ref(path)
         data = ref.get()
         return data or {}
 
     def update_session_status(self, date: str, session_id: str, new_status: str) -> bool:
-        """Update the status field of a specific session in Firebase."""
         try:
             ref = self.get_ref(f"chicken_counter/history/{date}/{session_id}/status")
             ref.set(new_status)
@@ -102,15 +100,6 @@ class FirebaseService:
             return False
 
     def get_latest_session(self, date: str) -> Optional[dict]:
-        """
-        Return the most recent session for a given date based on start_time.
-
-        Args:
-            date: "YYYY-MM-DD"
-
-        Returns:
-            dict with session data including session_id, or None if no data.
-        """
         history = self.get_chicken_history(date)
         if not history:
             return None

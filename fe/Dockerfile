@@ -1,10 +1,24 @@
-# FROM yarnpkg/node-yarn:node7
-FROM node:lts
+FROM node:lts-alpine AS builder
 
 WORKDIR /app
 
-COPY . /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-RUN yarn install
+COPY . .
+RUN yarn build
 
-CMD ["sh", "-c", "yarn dev > /app/logs/app.log 2>&1"]
+FROM node:lts-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./
+
+RUN yarn install --production --frozen-lockfile
+
+EXPOSE 3000
+
+CMD ["node", "build/index.js"]

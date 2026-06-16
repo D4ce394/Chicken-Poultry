@@ -1,14 +1,95 @@
 version: '3.8'
+
 services:
-  be:
-    build: ./be
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./be/logs:/app/logs
+  # ─── Frontend (SvelteKit SSR) ──────────────────────────────────
   fe:
     build: ./fe
     ports:
-      - "5173:5173"
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://be:3001/api}
+      - PUBLIC_BE2_URL=${PUBLIC_BE2_URL:-http://be2:8000}
+    depends_on:
+      - be
+      - be2
+    restart: unless-stopped
+
+  # ─── Backend 1 (Express + Prisma + SQLite) ────────────────────
+  be:
+    build: ./be
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL:-file:/app/data/mobile.db}
+      - JWT_ACCESS_TOKEN_SECRET=${JWT_ACCESS_TOKEN_SECRET}
+      - BASE_URL=${BASE_URL:-http://localhost:3001}
     volumes:
-      - ./fe/logs:/app/logs
+      - be_data:/app/data
+      - be_logs:/app/logs
+    restart: unless-stopped
+
+  # ─── Backend 2 (Python FastAPI + YOLO + Firebase) ─────────────
+  be2:
+    build: ./be2
+    ports:
+      - "8000:8000"
+    environment:
+      - FIREBASE_DATABASE_URL=${FIREBASE_DATABASE_URL}
+      - FIREBASE_SERVICE_ACCOUNT_PATH=/app/rfid-de0fd-firebase-adminsdk-fbsvc-22ca2974df.json
+      - DATABASE_URL=${BE2_DATABASE_URL:-}
+      - SECRET_KEY=${BE2_SECRET_KEY}
+      - INFERENCE_DEVICE=${INFERENCE_DEVICE:-cpu}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - be2_uploads:/app/uploads
+    restart: unless-stopped
+
+  # ─── Backend 3 (Express face-recognition) ─────────────────────
+  be3:
+    build: ./be3
+    ports:
+      - "3002:3002"
+    environment:
+      - HOST=3002
+      - DB_HOST=mysql
+      - DB_USER=${BE3_DB_USER:-root}
+      - DB_PASSWORD=${BE3_DB_PASSWORD:-root}
+      - DB_NAME=${BE3_DB_NAME:-recognition-kp}
+      - DB_PORT=3306
+      - JWT_SECRET=${BE3_JWT_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── MySQL (untuk be3) ────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${BE3_DB_PASSWORD:-root}
+      - MYSQL_DATABASE=${BE3_DB_NAME:-recognition-kp}
+      - MYSQL_USER=${BE3_DB_USER:-be3user}
+      - MYSQL_PASSWORD=${BE3_DB_PASSWORD:-root}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./be3/database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${BE3_DB_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  be_data:
+  be_logs:
+  be2_uploads:
+  mysql_data:

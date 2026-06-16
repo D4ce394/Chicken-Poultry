@@ -16,8 +16,8 @@ class Settings:
     ENV = os.getenv("ENV", "development")
     
     # API Configuration
-    API_HOST = "127.0.0.1"
-    API_PORT = 8080
+    API_HOST = os.getenv("API_HOST", "0.0.0.0")
+    API_PORT = int(os.getenv("API_PORT", "8000"))
     RELOAD = True
     
     # YOLO Models Configuration
