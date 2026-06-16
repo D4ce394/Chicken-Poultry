@@ -61,8 +61,8 @@ DB.sequelize
     .authenticate()
     .then(() => {
         logger.info('Database connected successfully!');
-        appServer.listen(port, '127.0.0.1', () => {
-            logger.info(`Server is running on http://127.0.0.1:${port}`);
+        appServer.listen(port, '0.0.0.0', () => {
+            logger.info(`Server is running on http://0.0.0.0:${port}`);
         });
         
     })

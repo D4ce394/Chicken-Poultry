@@ -38,10 +38,10 @@ export const repo = {
 
         if (search && search.trim() !== '') {
             whereCondition[Op.or] = [
-                { name: { [Op.iLike]: `%${search.trim()}%` } },
-                { email: { [Op.iLike]: `%${search.trim()}%` } },
-                { username: { [Op.iLike]: `%${search.trim()}%` } },
-                { department: { [Op.iLike]: `%${search.trim()}%` } },
+                { name: { [Op.like]: `%${search.trim()}%` } },
+                { email: { [Op.like]: `%${search.trim()}%` } },
+                { username: { [Op.like]: `%${search.trim()}%` } },
+                { department: { [Op.like]: `%${search.trim()}%` } },
             ];
         }
 

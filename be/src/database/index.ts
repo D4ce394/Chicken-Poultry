@@ -10,7 +10,7 @@ import path from 'path';
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: path.resolve(__dirname, '../../../sv-fs.sqlite'),
+    storage: process.env.SQLITE_PATH || path.resolve(__dirname, '../../../sv-fs.sqlite'),
         logging: NODE_ENV === 'development'
         ? (query, time) => logger.info(`${time}ms ${query}`)
         : false,
