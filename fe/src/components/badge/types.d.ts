@@ -1,0 +1,1 @@
+export type BadgeType = "success" | "error" | "warning" | "info" | "primary" | "light" | "dark";

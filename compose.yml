@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  be:
+    build: ./be
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./be/logs:/app/logs
+  fe:
+    build: ./fe
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./fe/logs:/app/logs

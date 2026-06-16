@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket & YOLO Models Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.connected {
+            background: #28a745;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-disconnect {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-disconnect:hover {
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+        
+        .log-entry.success {
+            color: #2ecc71;
+        }
+        
+        .log-entry.error {
+            color: #e74c3c;
+        }
+        
+        .log-entry.info {
+            color: #3498db;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+        }
+        
+        .detection-results {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .detection-item {
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #ecf0f1;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI-FRSS WebSocket & YOLO Test Dashboard</h1>
+            <p>Test WebSocket connections and YOLO model detection capabilities</p>
+        </div>
+        
+        <div class="content">
+            <!-- WebSocket Section -->
+            <div class="section">
+                <h2>
+                    <span class="status-indicator" id="ws-status"></span>
+                    WebSocket Connection Test
+                </h2>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="client-id">Client ID:</label>
+                        <input type="text" id="client-id" value="test-client-001" placeholder="Enter client ID">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="ws-endpoint">WebSocket Endpoint:</label>
+                        <select id="ws-endpoint">
+                            <option value="ws://localhost:8080/ws/">Main WebSocket</option>
+                            <option value="ws://localhost:8080/ws/surveillance/">Surveillance</option>
+                            <option value="ws://localhost:8080/ws/admin/">Admin</option>
+                            <option value="ws://localhost:8080/ws/attendance/">Attendance</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn" onclick="connectWebSocket()">Connect</button>
+                    <button class="btn btn-disconnect" onclick="disconnectWebSocket()">Disconnect</button>
+                    <button class="btn" onclick="sendTestMessage()">Send Test Message</button>
+                    <button class="btn" onclick="clearLogs('ws-logs')">Clear Logs</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="ws-messages-sent">0</div>
+                        <div class="stat-label">Messages Sent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="ws-messages-received">0</div>
+                        <div class="stat-label">Messages Received</div>
+                    </div>
+                </div>
+                
+                <div class="log-container" id="ws-logs">
+                    <div class="log-entry info">WebSocket logs will appear here...</div>
+                </div>
+            </div>
+            
+            <!-- YOLO Models Section -->
+            <div class="section">
+                <h2>
+                    <span class="status-indicator" id="yolo-status"></span>
+                    YOLO Models Test
+                </h2>
+                
+                <div class="controls">
+                    <div class="input-group">
+                        <label for="model-type">Model Type:</label>
+                        <select id="model-type">
+                            <option value="intrusion">Intrusion Detection</option>
+                            <option value="people">People Detection</option>
+                            <option value="security_threats">Security Threats</option>
+                            <option value="vehicle">Vehicle Detection</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="image-upload">Upload Test Image:</label>
+                        <input type="file" id="image-upload" accept="image/*" onchange="handleImageUpload(event)">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="confidence">Confidence Threshold:</label>
+                        <input type="range" id="confidence" min="0.1" max="1.0" step="0.1" value="0.5">
+                        <span id="confidence-value">0.5</span>
+                    </div>
+                    
+                    <button class="btn" onclick="testYOLOModel()">Test Detection</button>
+                    <button class="btn" onclick="getModelsInfo()">Get Models Info</button>
+                    <button class="btn" onclick="clearLogs('yolo-logs')">Clear Logs</button>
+                </div>
+                
+                <div id="image-preview-container"></div>
+                <div id="detection-results-container"></div>
+                
+                <div class="log-container" id="yolo-logs">
+                    <div class="log-entry info">YOLO model logs will appear here...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let messagesSent = 0;
+        let messagesReceived = 0;
+        let currentImage = null;
+
+        // WebSocket Functions
+        function connectWebSocket() {
+            const clientId = document.getElementById('client-id').value || 'test-client-001';
+            const endpoint = document.getElementById('ws-endpoint').value;
+            const wsUrl = endpoint + clientId;
+            
+            try {
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = function(event) {
+                    updateWSStatus(true);
+                    logMessage('ws-logs', 'success', `Connected to ${wsUrl}`);
+                };
+                
+                websocket.onmessage = function(event) {
+                    messagesReceived++;
+                    updateStats();
+                    logMessage('ws-logs', 'info', `Received: ${event.data}`);
+                };
+                
+                websocket.onclose = function(event) {
+                    updateWSStatus(false);
+                    logMessage('ws-logs', 'error', `Connection closed: ${event.code} - ${event.reason}`);
+                };
+                
+                websocket.onerror = function(error) {
+                    updateWSStatus(false);
+                    logMessage('ws-logs', 'error', `WebSocket error: ${error}`);
+                };
+                
+            } catch (error) {
+                logMessage('ws-logs', 'error', `Connection failed: ${error.message}`);
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+                updateWSStatus(false);
+                logMessage('ws-logs', 'info', 'Disconnected by user');
+            }
+        }
+
+        function sendTestMessage() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const testMessage = {
+                    type: 'test',
+                    message: 'Hello from test dashboard!',
+                    timestamp: new Date().toISOString()
+                };
+                
+                websocket.send(JSON.stringify(testMessage));
+                messagesSent++;
+                updateStats();
+                logMessage('ws-logs', 'success', `Sent: ${JSON.stringify(testMessage)}`);
+            } else {
+                logMessage('ws-logs', 'error', 'WebSocket not connected');
+            }
+        }
+
+        function updateWSStatus(connected) {
+            const indicator = document.getElementById('ws-status');
+            if (connected) {
+                indicator.classList.add('connected');
+            } else {
+                indicator.classList.remove('connected');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('ws-messages-sent').textContent = messagesSent;
+            document.getElementById('ws-messages-received').textContent = messagesReceived;
+        }
+
+        // YOLO Functions
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImage = e.target.result;
+                    displayImagePreview(currentImage);
+                    logMessage('yolo-logs', 'info', `Image loaded: ${file.name} (${file.size} bytes)`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function displayImagePreview(imageSrc) {
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = `
+                <h3>Image Preview:</h3>
+                <img src="${imageSrc}" class="image-preview" alt="Test image">
+            `;
+        }
+
+        async function testYOLOModel() {
+            if (!currentImage) {
+                logMessage('yolo-logs', 'error', 'Please upload an image first');
+                return;
+            }
+
+            const modelType = document.getElementById('model-type').value;
+            const confidence = parseFloat(document.getElementById('confidence').value);
+            
+            const requestData = {
+                image_data: currentImage.split(',')[1], // Remove data:image/jpeg;base64, prefix
+                model_type: modelType,
+                confidence: confidence,
+                iou_threshold: 0.45
+            };
+
+            try {
+                logMessage('yolo-logs', 'info', `Testing ${modelType} model with confidence ${confidence}...`);
+                updateYOLOStatus(true);
+                
+                const response = await fetch(`http://localhost:8080/api/v1/mobile/${modelType}/detect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    logMessage('yolo-logs', 'success', `Detection successful! Found ${result.total_detections} objects`);
+                    displayDetectionResults(result);
+                } else {
+                    logMessage('yolo-logs', 'error', `Detection failed: ${result.message}`);
+                }
+                
+            } catch (error) {
+                logMessage('yolo-logs', 'error', `Detection request failed: ${error.message}`);
+                updateYOLOStatus(false);
+            }
+        }
+
+        function displayDetectionResults(result) {
+            const container = document.getElementById('detection-results-container');
+            let html = `
+                <div class="detection-results">
+                    <h3>Detection Results</h3>
+                    <p><strong>Model:</strong> ${result.model_type}</p>
+                    <p><strong>Processing Time:</strong> ${result.processing_time.toFixed(3)}s</p>
+                    <p><strong>Total Detections:</strong> ${result.total_detections}</p>
+                    <p><strong>Image Size:</strong> ${result.image_size[0]} x ${result.image_size[1]}</p>
+            `;
+            
+            if (result.detections && result.detections.length > 0) {
+                html += '<h4>Detected Objects:</h4>';
+                result.detections.forEach((detection, index) => {
+                    html += `
+                        <div class="detection-item">
+                            <strong>${detection.class_name}</strong> 
+                            (Confidence: ${(detection.confidence * 100).toFixed(1)}%)
+                            <br>
+                            <small>BBox: [${detection.bbox.map(b => b.toFixed(1)).join(', ')}]</small>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        async function getModelsInfo() {
+            try {
+                logMessage('yolo-logs', 'info', 'Fetching models information...');
+                
+                const response = await fetch('http://localhost:8080/api/yolo/stats');
+                const result = await response.json();
+                
+                if (result.service_info) {
+                    logMessage('yolo-logs', 'success', `Models info: ${JSON.stringify(result, null, 2)}`);
+                    updateYOLOStatus(true);
+                } else {
+                    logMessage('yolo-logs', 'error', `Failed to get models info: ${JSON.stringify(result)}`);
+                }
+                
+            } catch (error) {
+                logMessage('yolo-logs', 'error', `Models info request failed: ${error.message}`);
+                updateYOLOStatus(false);
+            }
+        }
+
+        function updateYOLOStatus(healthy) {
+            const indicator = document.getElementById('yolo-status');
+            if (healthy) {
+                indicator.classList.add('connected');
+            } else {
+                indicator.classList.remove('connected');
+            }
+        }
+
+        // Utility Functions
+        function logMessage(containerId, type, message) {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLogs(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="log-entry info">${containerId.includes('ws') ? 'WebSocket' : 'YOLO'} logs cleared...</div>`;
+        }
+
+        // Initialize
+        document.getElementById('confidence').addEventListener('input', function(e) {
+            document.getElementById('confidence-value').textContent = e.target.value;
+        });
+
+        // Auto-check server health on page load
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('http://localhost:8080/');
+                const result = await response.json();
+                if (result.status === 'healthy') {
+                    logMessage('ws-logs', 'success', 'Server is running and healthy');
+                    logMessage('yolo-logs', 'success', 'YOLO service detected as healthy');
+                    updateYOLOStatus(true);
+                }
+            } catch (error) {
+                logMessage('ws-logs', 'error', 'Server health check failed - make sure server is running');
+                logMessage('yolo-logs', 'error', 'Server health check failed - make sure server is running');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.vscode/
+*.sqlite3
+*.sqlite
+.DS_Store
+# Firebase service account (contains private key — never commit)
+*firebase-adminsdk*.json
+# Uploaded media files
+be2/uploads/
