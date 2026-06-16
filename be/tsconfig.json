@@ -26,6 +26,6 @@
         "skipLibCheck": true,
         "lib": ["esnext", "dom"]
     },
-    "include": ["src/**/*.ts"],  // ✅ pastikan tests juga di-include
-    "exclude": ["node_modules"]
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "src/tests/**", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }
