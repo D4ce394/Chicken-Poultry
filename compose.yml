@@ -1,21 +1,24 @@
 version: '3.8'
 
 services:
-  # ─── Frontend (SvelteKit SSR) ──────────────────────────────────
+  # ─── Frontend (SvelteKit adapter-node) ────────────────────────
   fe:
-    build: ./fe
+    build:
+      context: ./fe
+      args:
+        - PUBLIC_API_URL=http://localhost:3001/api
+        - PUBLIC_BE2_URL=http://localhost:8000
+        - BUILD_TARGET=node
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PUBLIC_API_URL=${PUBLIC_API_URL:-http://be:3001/api}
-      - PUBLIC_BE2_URL=${PUBLIC_BE2_URL:-http://be2:8000}
     depends_on:
       - be
       - be2
     restart: unless-stopped
 
-  # ─── Backend 1 (Express + Prisma + SQLite) ────────────────────
+  # ─── Backend 1 (Express + Sequelize + SQLite) ─────────────────
   be:
     build: ./be
     ports:
@@ -23,9 +26,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_URL=${DATABASE_URL:-file:/app/data/mobile.db}
+      - SQLITE_PATH=/app/data/sv-fs.sqlite
       - JWT_ACCESS_TOKEN_SECRET=${JWT_ACCESS_TOKEN_SECRET}
-      - BASE_URL=${BASE_URL:-http://localhost:3001}
+      - BASE_URL=http://localhost:3001
     volumes:
       - be_data:/app/data
       - be_logs:/app/logs
@@ -37,9 +40,9 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - PORT=8000
       - FIREBASE_DATABASE_URL=${FIREBASE_DATABASE_URL}
       - FIREBASE_SERVICE_ACCOUNT_PATH=/app/rfid-de0fd-firebase-adminsdk-fbsvc-22ca2974df.json
-      - DATABASE_URL=${BE2_DATABASE_URL:-}
       - SECRET_KEY=${BE2_SECRET_KEY}
       - INFERENCE_DEVICE=${INFERENCE_DEVICE:-cpu}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}

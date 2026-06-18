@@ -12,3 +12,4 @@ be2/uploads/
 chicken-poultry/
 yarn.lock
 package-lock.json
+.logs

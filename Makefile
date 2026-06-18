@@ -1,5 +1,5 @@
 .PHONY: help setup dev docker docker-build docker-down logs \
-        be be2 be3 fe fe-build fe-firebase
+        be be2 be3 fe fe-build fe-firebase local
 
 # ──────────────────────────────────────────────
 #  Tampilkan semua perintah
@@ -14,9 +14,10 @@ help:
 	@echo "    make docker-down   — stop semua container"
 	@echo "    make logs          — lihat log semua service (Ctrl+C untuk keluar)"
 	@echo ""
-	@echo "  LOKAL (tanpa Docker, satu-satu):"
-	@echo "    make setup         — install dependencies semua backend"
-	@echo "    make be            — jalankan be  (Express + Prisma, port 3000)"
+	@echo "  LOKAL (tanpa Docker):"
+	@echo "    make local         — jalankan SEMUA sekaligus (be + be2 + fe)"
+	@echo "    make setup         — install dependencies semua service"
+	@echo "    make be            — jalankan be  (Express + SQLite, port 3000)"
 	@echo "    make be2           — jalankan be2 (FastAPI + YOLO, port 8000)"
 	@echo "    make be3           — jalankan be3 (Express face-rec, port 3002)"
 	@echo "    make fe            — jalankan fe  (SvelteKit dev, port 5173)"
@@ -59,23 +60,25 @@ setup:
 	@echo "✓ Semua dependency terinstall"
 
 # ──────────────────────────────────────────────
-#  JALANKAN LOKAL (masing-masing backend)
+#  JALANKAN SEMUA LOKAL SEKALIGUS
+# ──────────────────────────────────────────────
+local:
+	@bash start-local.sh
+
+# ──────────────────────────────────────────────
+#  JALANKAN LOKAL (masing-masing service)
 # ──────────────────────────────────────────────
 be:
-	@if [ ! -f be/.env ]; then cp be/.env.example be/.env; echo "⚠  be/.env dibuat — isi dulu sebelum lanjut"; fi
 	cd be && npm run dev
 
 be2:
-	@if [ ! -f be2/.env ]; then cp be2/.env.example be2/.env; echo "⚠  be2/.env dibuat — isi dulu sebelum lanjut"; fi
 	@if [ ! -d be2/venv ]; then echo "→ Setup venv..."; cd be2 && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt; fi
 	cd be2 && ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 be3:
-	@if [ ! -f be3/.env ]; then cp be3/.env.example be3/.env; echo "⚠  be3/.env dibuat — isi dulu sebelum lanjut"; fi
 	cd be3 && npm start
 
 fe:
-	@if [ ! -f fe/.env ]; then cp fe/.env.example fe/.env; echo "⚠  fe/.env dibuat — isi PUBLIC_API_URL jika perlu"; fi
 	cd fe && npm run dev
 
 # ──────────────────────────────────────────────
